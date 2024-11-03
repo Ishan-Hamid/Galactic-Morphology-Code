@@ -1,0 +1,116 @@
+import numpy as np
+import numpy
+import pandas as pd
+import xlrd
+import matplotlib.pyplot as plt
+import scipy.optimize
+from scipy import stats as sc
+import scipy.stats
+from scipy.optimize import minimize_scalar
+
+#####################################################################################################################################
+
+radius = pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx", sheet_name = "NGC3379-2",  usecols='A', skiprows=1)
+counts = pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",sheet_name = "NGC3379-2",  usecols='B', skiprows=1)
+deviation = pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",sheet_name = "NGC3379-2",  usecols='C', skiprows=1)
+points = pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",sheet_name = "NGC3379-2",  usecols='D', skiprows=1)
+
+radarray = np.array(radius)
+countarray = np.array(counts)
+devarray = np.array(deviation)
+pointarray = np.array(points)
+
+radarray = radarray.flatten()
+countarray = countarray.flatten()
+devarray = devarray.flatten()
+pointarray = pointarray.flatten()
+
+######################################################################################################################################
+
+def findReff(radius, counts):
+    for i in range(len(counts)):
+        if counts[i] < counts[0]/2:
+            Beff = (counts[i-1] + counts[i])/2
+            Reff = (radius[i-1] + radius[i])/2
+            return [Reff, Beff]
+        
+def FindReff(x,y):
+
+    total_area = np.trapz(y, x)
+
+    cumulative_area = 0.0
+    half_area = total_area / 2
+    index = 0
+
+    for i in range(len(x) - 1):
+        width = x[i + 1] - x[i]
+        cumulative_area += 0.5 * (y[i] + y[i + 1]) * width
+        if cumulative_area >= half_area:
+            index = i
+            break
+
+    x_half_area = np.interp(half_area, [cumulative_area - 0.5 * (y[index] + y[index + 1]) * width, cumulative_area],
+                            [x[index], x[index + 1]])
+
+    y_half_area = np.interp(x_half_area, x[index:index + 2], y[index:index + 2])
+
+    return x_half_area, y_half_area
+
+CValues = FindReff(radarray, countarray)
+
+def S1V(R, n):
+    Bn = 0.868*n - 0.142
+    Cn = 2.5*Bn
+    brightness = CValues[0] * np.exp(-Cn*((R/CValues[1])**(1/n) - 1 ))
+    return brightness
+
+
+def SersicExp(R, Reff, Beff, n):
+    Bn = 0.868*n - 0.142
+    Cn = 2.5*Bn
+    brightness = Beff * np.exp(-Cn*((R/Reff)**(1/n) - 1 ))
+    return brightness
+
+def modelfunc(x, *params):
+    return SersicExp(x, params[0], params[1], params[2])
+
+def chi_squared(model_params, model, x_data, y_data, y_err):
+    return numpy.sum(((y_data - model(x_data, *model_params))/y_err)**2)
+
+######################################################################################################################################
+
+testvalues = findReff(radarray, countarray)
+
+print("the test values are:", testvalues)
+
+initial_values = [testvalues[0], testvalues[1], 4]
+initial_values = np.array(initial_values)
+
+stderr = devarray/(pointarray)**0.5
+adderr = 93*np.ones(len(stderr))
+
+Total_error = (stderr**2 + adderr**2)**0.5
+
+degrees_of_freedom = radarray.size - initial_values.size
+
+######################################################################################################################################
+
+popt, cov = scipy.optimize.curve_fit(modelfunc, # function to fit
+                                     radarray, # x data
+                                     countarray, # y data
+                                     sigma = Total_error, absolute_sigma=True, p0=initial_values, check_finite=True, maxfev=50000)
+
+print('Optimised parameters = ', popt, '\n')
+print('Covariance matrix = \n', cov)
+
+chi_squared_min = chi_squared(popt, modelfunc, radarray, countarray, Total_error)
+
+print('chi^2_min = {}'.format(chi_squared_min))
+print('reduced chi^2 = {}'.format(chi_squared_min/degrees_of_freedom))
+
+smooth_x = np.linspace(radarray[0], radarray[-1], 10000)
+plt.loglog(radarray,countarray)
+plt.show()
+
+plt.plot(radarray,countarray)
+plt.show()
