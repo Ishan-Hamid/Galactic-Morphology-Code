@@ -1,0 +1,397 @@
+import numpy as np
+import numpy
+import pandas as pd
+import xlrd
+import matplotlib.pyplot as plt
+import scipy.optimize
+from scipy import stats as sc
+import scipy.stats
+from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize
+from matplotlib import rc
+
+
+def organise(data):
+    org = [np.array(data[0]).flatten(), np.array(data[1]).flatten(), np.array(data[2]).flatten(),
+           np.array(data[3]).flatten()]
+    return org
+
+
+def sersic_profile(R, Beff, Reff, n):
+    Bn = 0.868 * n - 0.142
+    Cn = 2.5 * Bn
+    brightness = Beff * np.exp(-Cn * ((R / Reff) ** (1 / n) - 1))
+    return brightness
+
+def chi_squared(params, radius, count_rate):
+    model_count_rate = sersic_profile(radius, *params)
+    return np.sum(((model_count_rate - count_rate) / count_rate) ** 2)
+
+
+dataM31 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx", sheet_name="M31",
+                                  usecols='A', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx", sheet_name="M31",
+                                  usecols='B', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx", sheet_name="M31",
+                                  usecols='C', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx", sheet_name="M31",
+                                  usecols='D', skiprows=1)])
+dataM101 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="M101", usecols='A', skiprows=1),
+                     pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="M101", usecols='B', skiprows=1),
+                     pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="M101", usecols='C', skiprows=1),
+                     pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="M101", usecols='D', skiprows=1)])
+dataNGC3198 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3198", usecols='A', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3198", usecols='B', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3198", usecols='C', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3198", usecols='D', skiprows=1)])
+dataNGC3379 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3379", usecols='A', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3379", usecols='B', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3379", usecols='C', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC3379", usecols='D', skiprows=1)])
+dataM81 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M81", usecols='A', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M81", usecols='B', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M81", usecols='C', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M81", usecols='D', skiprows=1)])
+data1275 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="NGC1275", usecols='A', skiprows=1),
+                     pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="NGC1275", usecols='B', skiprows=1),
+                     pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="NGC1275", usecols='C', skiprows=1),
+                     pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                   sheet_name="NGC1275", usecols='D', skiprows=1)])
+dataM33 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33", usecols='A', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33", usecols='B', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33", usecols='C', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33", usecols='D', skiprows=1)])
+dataM51 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M51", usecols='A', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M51", usecols='B', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M51", usecols='C', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M51", usecols='D', skiprows=1)])
+dataM94 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx", sheet_name="M94",
+                                  usecols='A', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M94", usecols='B', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M94", usecols='C', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M94", usecols='D', skiprows=1)])
+dataNGC1503 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1503", usecols='A', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1503", usecols='B', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1503", usecols='C', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1503", usecols='D', skiprows=1)])
+dataNGC2903 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903", usecols='A', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903", usecols='B', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903", usecols='C', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903", usecols='D', skiprows=1)])
+dataNGC1573 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1573", usecols='A', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1573", usecols='B', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1573", usecols='C', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC1573", usecols='D', skiprows=1)])
+dataNGC2903_2 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903-2", usecols='A', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903-2", usecols='B', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903-2", usecols='C', skiprows=1),
+                        pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                      sheet_name="NGC2903-2", usecols='D', skiprows=1)])
+dataM33_2 = organise([pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33-2", usecols='A', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33-2", usecols='B', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33-2", usecols='C', skiprows=1),
+                    pd.read_excel(r"C:\Users\ishan\Desktop\Uni Files\Year 2\Labs\#RLI\DATA\M31.xlsx",
+                                  sheet_name="M33-2", usecols='D', skiprows=1)])
+
+
+class galaxy:
+    def __init__(self, name, radius, count, dev, points, background):
+        self.name = name
+        self.radius = radius
+        self.count = count
+        self.dev = dev
+        self.points = points
+        self.background = background
+
+    def error(self):
+        count_error = self.dev / self.points ** 0.5
+        add_error = self.count ** 0.5
+        background_error = (self.background) ** 0.5
+        total_error = (add_error ** 2 + count_error ** 2 + background_error ** 2) ** 0.5
+        return total_error
+
+    def degrees_of_freedom(self):
+        return self.radius.size - 3
+
+    def FindReff(self):
+        x = self.radius
+        y = self.count
+        total_area = np.trapz(y, x)
+        cumulative_area = 0.0
+        half_area = total_area / 2
+        index = 0
+        for i in range(len(x) - 1):
+            width = x[i + 1] - x[i]
+            cumulative_area += 0.5 * (y[i] + y[i + 1]) * width
+            if cumulative_area >= half_area:
+                index = i
+                break
+        x_half_area = np.interp(half_area, [cumulative_area - 0.5 * (y[index] + y[index + 1]) * width, cumulative_area],
+                                [x[index], x[index + 1]])
+        y_half_area = np.interp(x_half_area, x[index:index + 2], y[index:index + 2])
+        return [x_half_area, y_half_area]
+
+    def CutSeeing(self, n):
+        for i in range(len(self.radius)):
+            if self.radius[i] > n:
+                self.radius = self.radius[i::]
+                self.count = self.count[i::]
+                self.dev = self.dev[i::]
+                self.points = self.points[i::]
+                return print('data below radius of', n, 'arcseconds for', self.name, 'have been cut')
+
+    def sersic_profile(self, Beff, Reff, n):
+        Bn = 0.868 * n - 0.142
+        Cn = 2.5 * Bn
+        brightness = Beff * np.exp(-Cn * ((self.radius / Reff) ** (1 / n) - 1))
+        return brightness
+
+    def chi_squared(self, params):
+        model_count_rate = self.sersic_profile(*params)
+        return np.sum(((model_count_rate - self.count) / self.error()) ** 2)
+
+    def chi_squared_min(self, params):
+        model_count_rate = self.sersic_profile(*params)
+        return np.sum(((model_count_rate - self.count) / self.count) ** 2)
+
+    def fitted_countrate(self, n):
+        initial_guess = [10, 3, n]
+        result = minimize(self.chi_squared_min, initial_guess, method='Nelder-Mead')
+        I0_fit, Re_fit, n_fit = result.x
+        return self.sersic_profile(I0_fit, Re_fit, n_fit)
+
+    def SersicParams(self, n):
+        initial_guess = [10, 3, n]
+        result = minimize(self.chi_squared_min, initial_guess, method='Nelder-Mead')
+        I0_fit, Re_fit, n_fit = result.x
+        return [I0_fit, Re_fit, n_fit]
+
+
+    def plot(self, n):
+        radius = self.radius
+        count_rate = self.count
+        initial_guess = [self.FindReff()[0], self.FindReff()[1], n]
+        result = minimize(self.chi_squared_min, initial_guess, method='Nelder-Mead')
+        I0_fit, Re_fit, n_fit = result.x
+        fitted_count_rate = self.sersic_profile(I0_fit, Re_fit, n_fit)
+        return plt.plot(radius, count_rate, 'bo', label='Observed'), plt.plot(radius, fitted_count_rate, 'r-',
+                                                                              label='Fit'), plt.xlabel(
+            'Radius'), plt.ylabel('Count Rate'), plt.legend(), plt.title(self.name)
+
+    def Describe(self, n):
+        radius = self.radius
+        count_rate = self.count
+        initial_guess = [self.FindReff()[0], self.FindReff()[1], n]
+        result = minimize(self.chi_squared_min, initial_guess, method='Nelder-Mead')
+        I0_fit, Re_fit, n_fit = result.x
+        fitted_count_rate = self.sersic_profile(I0_fit, Re_fit, n_fit)
+        DoF = self.degrees_of_freedom()
+        return print('Estimated Parameters For -', self.name), print(self.name, 'Effective Radius:',
+                                                                     self.FindReff()[0]), print(self.name,
+                                                                                                'Effective Brightness:',
+                                                                                                self.FindReff()[
+                                                                                                    1]), print(
+            'Reduced Chi^2 =', self.chi_squared_min(initial_guess) / DoF), print('Re_fit =', Re_fit), print('I0_fit =',
+                                                                                                            I0_fit), print(
+            'Index =', n_fit)
+
+    def Describe2(self, n):
+        radius = self.radius
+        count_rate = self.count
+        initial_guess = [100, 3, n]
+        result = minimize(self.chi_squared_min, initial_guess, method='Nelder-Mead')
+        I0_fit, Re_fit, n_fit = result.x
+        fitted_count_rate = self.sersic_profile(I0_fit, Re_fit, n_fit)
+        DoF = self.degrees_of_freedom()
+        return print('Estimated Parameters For -', self.name), print(self.name, 'Effective Radius:',
+                                                                     self.FindReff()[0]), print(self.name,
+                                                                                                'Effective Brightness:',
+                                                                                                self.FindReff()[
+                                                                                                    1]), print(
+            'Reduced Chi^2 =', self.chi_squared_min(initial_guess) / DoF), print('Re_fit =', Re_fit), print('I0_fit =',
+                                                                                                            I0_fit), print(
+            'Index =', n_fit)
+
+    def residuals(self, n):
+        radius = self.radius
+        resids = (np.log(self.count) - np.log(self.fitted_countrate(n)))
+        normalised = resids / self.dev
+        return [radius, normalised]
+
+    def logplot(self, n):
+        radius = self.radius
+        count_rate = self.count
+        initial_guess = [self.FindReff()[0], self.FindReff()[1], n]
+        result = minimize(self.chi_squared_min, initial_guess, method='Nelder-Mead')
+        I0_fit, Re_fit, n_fit = result.x
+        fitted_count_rate = self.sersic_profile(I0_fit, Re_fit, n_fit)
+        return plt.loglog(radius, count_rate, 'bo', label='Observed'), plt.loglog(radius, fitted_count_rate, 'r-',
+                                                                                  label='Fit'), plt.xlabel(
+            'log(Radius)'), plt.ylabel('log(Count Rate)'), plt.legend(), plt.title(self.name)
+
+    def index_error(self, *initial_value):
+        dof = self.radius.size - 3
+        popt, cov = scipy.optimize.curve_fit(sersic_profile,  # function to fit
+                                             self.radius,  # x data
+                                             self.count,  # y data
+                                             sigma=self.error(), absolute_sigma=False, p0=initial_value, check_finite=True,
+                                             maxfev=500000)
+        chi_squared_min = chi_squared(popt, self.radius, self.count)
+        return print('Optimised parameters = ', popt, '\n'), print('Covariance matrix = \n', cov), print('chi^2_min = {}'.format(chi_squared_min)), print('reduced chi^2 = {}'.format(chi_squared_min / dof))
+
+    def resplot(self, n, a, x ,y):
+        fig2 = plt.figure(2, figsize=(8, 5))
+        frame1 = fig2.add_axes((.1, .35, .6, .6))
+        plt.xlim(np.log(self.radius[0]), np.log(self.radius[-1]))
+
+        plt.title(self.name,weight = 'bold', fontsize = 16)
+
+        frame1.tick_params(top=True, labeltop=False, bottom=True, labelbottom=False, right = True)
+
+        frame1.tick_params(axis="y", direction="in")
+        frame1.tick_params(axis="x", direction="in", pad=-15)
+
+        line1 = plt.errorbar(np.log(self.radius), np.log(self.count), self.error() / self.count,
+                             elinewidth=1, ls='dotted', alpha=0.5, c='r', label='Data', lw=2)
+        line2 = plt.plot(np.log(self.radius), np.log(self.fitted_countrate(n)), label='Model', c='b', lw=1)
+        plt.text(x, y , 'n ={}'.format(a), c='b', fontsize=16)
+        plt.ylabel('log(Count)',weight = 'bold', fontsize = 16)
+        plt.legend()
+        frame2 = fig2.add_axes((.1, .15, .6, .2))
+        plt.xlim(np.log(self.radius[0]), np.log(self.radius[-1]))
+        resid = plt.scatter(np.log(self.radius), self.residuals(n)[1], marker='x', c='r', alpha=0.7)
+        plt.axhline(y=0, color='black', linestyle='dashed', lw=1)
+        plt.xlabel('log(Radius/arc sec)',weight = 'bold', fontsize = 16)
+        return frame1, line1, line2, plt.legend(), frame2, resid, plt.axhline(y=0, color='black', linestyle='dashed', lw=1), plt.xlabel('log(Radius/arc sec)')
+
+    def Trim(self, T):
+        self.radius = self.radius[:-T:]
+        self.count = self.count[:-T:]
+        self.dev = self.dev[:-T:]
+        self.points = self.points[:-T:]
+        return print('Trimmed to', T)
+
+rc('font', **{'family': 'Times New Roman', 'size': 10})
+
+
+M31 = galaxy('M31', *dataM31, 1963)
+M101 = galaxy('M101', *dataM101, 782.4)
+NGC3198 = galaxy('NGC3198', *dataNGC3198, 377.4)
+NGC3379 = galaxy('NGC3379', *dataNGC3379, 4183)
+M81 = galaxy('M81', *dataM81, 1963)
+NGC1275 = galaxy('NGC1275', *data1275, 2227.1)
+M33 = galaxy('M33', *dataM33, 397.9)
+M51 = galaxy('M51', *dataM51, 763)
+M94 = galaxy('M94', *dataM94, 770.1)
+NGC1503 = galaxy('NGC1503', *dataNGC1503, 830)
+NGC2903 = galaxy('NGC2903', *dataNGC2903, 1923.4)
+NGC2903_2 = galaxy('NGC2903_2', *dataNGC2903_2, 1923.4)
+NGC1573 = galaxy('NGC1573', *dataNGC1573, 1931.5)
+M33_2 = galaxy('M33_2', *dataM33_2, 397.9)
+
+NGC1275.CutSeeing(3)
+NGC1573.CutSeeing(3)
+NGC3198.CutSeeing(3)
+NGC1503.CutSeeing(3)
+NGC1573.CutSeeing(3)
+M101.CutSeeing(3)
+M94.CutSeeing(2)
+
+print(NGC1573.SersicParams(3))
+print(NGC1573.index_error((100,100,3)))
+rc('font', **{'family': 'Times New Roman', 'size': 10})
+
+xraw = NGC3379.radius
+xdata = np.log(NGC3379.radius)
+ydata = np.log(NGC3379.count)
+yerr = NGC3379.error()/NGC3379.count
+devs = NGC3379.dev
+
+NGC3379.CutSeeing(3)
+
+print(NGC3379.SersicParams(2))
+
+ymodel = np.log(sersic_profile(xraw, NGC3379.SersicParams(2)[0], NGC3379.SersicParams(2)[1], NGC3379.SersicParams(2)[2]))
+
+residuals = (ydata - ymodel)/devs
+
+fig2 = plt.figure(2, figsize=(9, 7))
+plt.style.use('fast')
+
+rc('font', **{'family': 'Times New Roman', 'size': 10})
+
+frame1 = fig2.add_axes((.1, .25, .84, .7))
+plt.xlim(xdata[0], xdata[-1])
+frame1.tick_params(top=False, labeltop=False, bottom=True, labelbottom=False)
+frame1.tick_params(axis="y", direction="in")
+frame1.tick_params(axis="x", direction="in", pad=-15)
+
+plt.errorbar(xdata[6:-13:], ydata[6:-13:], yerr[6:-13:], elinewidth=1, ls='dotted', alpha=1, c='g', label='Data', lw=3 )
+plt.errorbar(xdata[-13:-1:], ydata[-13:-1:], yerr[-13:-1:], elinewidth=1, ls='dotted', alpha=1, c='r', label='Data', lw=3 )
+plt.errorbar(xdata[:7:], ydata[:7:], yerr[:7:], elinewidth=1, ls='dotted', alpha=1, c='r', label='Data', lw=2 )
+plt.plot(xdata, ymodel, c='b', lw=3)
+plt.axvline(x=np.log(NGC3379.radius[0]), ymin= 0, ymax=1, ls = 'dashed', c = 'black', alpha = 0.5)
+plt.axvline(x=np.log(NGC3379.radius[-13]), ymin= 0, ymax=1, ls = 'dashed', c = 'black', alpha = 0.5)
+plt.text(-0.4, 2, 'Galaxy - NGC3379', c='black', fontsize=25, weight='bold')
+plt.text(-0.32, 1, 'n = 4.79', c='black', fontsize=25, weight='bold')
+plt.yticks(fontsize = 18)
+
+frame2 = fig2.add_axes((.1, .1, .84, .15))
+plt.xlim(xdata[0], xdata[-1])
+plt.scatter(np.log(NGC3379.radius[:-13:]), NGC3379.residuals(2)[1][:-13:], marker='.', c='g', alpha=0.7)
+plt.scatter(np.log(NGC3379.radius[-13:-1:]), NGC3379.residuals(2)[1][-13:-1:], marker='.', c='r', alpha=0.7)
+plt.scatter(xdata[:6:], residuals[:6:], marker='.', c='r', alpha=0.7)
+plt.axhline(y=0, color='black', linestyle='dashed', lw=1)
+plt.xticks(fontsize = 18)
+plt.xlabel('log(Radius/arc sec)', weight='bold', fontsize=25)
+plt.savefig('FinalPlotNGC3379')
+plt.show()
+
